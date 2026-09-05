@@ -110,6 +110,66 @@ def validate_metadata(meta_path: Path) -> dict:
     return metadata
 
 
+def resolve_package_slug(plugin_dir: Path, output_dir: Path, explicit_slug: str = "", metadata: dict = None) -> tuple:
+    """
+    Deterministically resolves the internal zip root folder name (package slug)
+    to prevent 'Plugin folder name mismatch' errors on plugins.qgis.org.
+
+    Resolution Ladder:
+    1. Explicit CLI argument (--package-name / --folder-name)
+    2. Explicit metadata key ('package_name' or 'slug' in metadata.txt)
+    3. Existing release archives in output_dir (dist/) to guarantee version-to-version continuity
+    4. Git wrapper affix stripping (e.g. 'qgis-my-plugin' -> 'my_plugin')
+    5. Sanitized lowercase directory name fallback
+
+    Returns:
+        (slug, source_description)
+    """
+    # 1. Explicit CLI argument
+    if explicit_slug and explicit_slug.strip():
+        slug = re.sub(r"[^a-zA-Z0-9_]", "_", explicit_slug.strip()).lower()
+        return slug, "CLI argument (--package-name)"
+
+    # 2. metadata.txt explicit field
+    if metadata:
+        for key in ("package_name", "slug", "plugin_package_name"):
+            val = metadata.get(key, "").strip()
+            if val:
+                slug = re.sub(r"[^a-zA-Z0-9_]", "_", val).lower()
+                return slug, f"metadata.txt ('{key}')"
+
+    # 3. Previous release archive inspection in output_dir (dist/)
+    if output_dir and output_dir.exists():
+        zips = sorted(output_dir.glob("*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
+        for z in zips:
+            try:
+                with zipfile.ZipFile(z, "r") as zf:
+                    names = zf.namelist()
+                    prefixes = {n.split("/")[0] for n in names if "/" in n}
+                    if len(prefixes) == 1:
+                        prev_slug = list(prefixes)[0]
+                        if prev_slug and prev_slug != "dist":
+                            return prev_slug, f"previous release archive ({z.name})"
+            except Exception:
+                continue
+
+    # 4. Git wrapper affix stripping (e.g. 'qgis-buffer' or 'buffer-qgis')
+    folder_name = plugin_dir.name.strip()
+    clean_name = folder_name
+    if re.match(r"^qgis[-_]", clean_name, flags=re.IGNORECASE):
+        clean_name = re.sub(r"^qgis[-_]", "", clean_name, flags=re.IGNORECASE)
+    if re.search(r"[-_](qgis[-_]plugin|qgis)$", clean_name, flags=re.IGNORECASE):
+        clean_name = re.sub(r"[-_](qgis[-_]plugin|qgis)$", "", clean_name, flags=re.IGNORECASE)
+
+    if clean_name != folder_name:
+        slug = re.sub(r"[^a-zA-Z0-9_]", "_", clean_name).lower()
+        return slug, f"stripped git repository wrapper affix from '{folder_name}'"
+
+    # 5. Default fallback to sanitized folder name
+    slug = re.sub(r"[^a-zA-Z0-9_]", "_", folder_name).lower()
+    return slug, f"folder name ('{folder_name}')"
+
+
 def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_qt6: bool = False, package_name: str = "") -> Path:
     """Validate, optionally bump version, and package into compliant zip."""
     plugin_dir = plugin_dir.resolve()
@@ -160,17 +220,10 @@ def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_
         # Re-validate
         metadata = validate_metadata(meta_path)
 
-    # Derive internal top-level directory name
-    # Priority: explicit argument -> metadata.txt 'package_name' -> folder name
-    if package_name:
-        plugin_slug = package_name.strip()
-    elif "package_name" in metadata:
-        plugin_slug = metadata["package_name"].strip()
-    else:
-        folder_name = plugin_dir.name
-        plugin_slug = re.sub(r"[^a-zA-Z0-9_]", "_", folder_name).lower()
-
+    # Derive internal top-level directory name using resolution ladder
     output_dir.mkdir(parents=True, exist_ok=True)
+    plugin_slug, slug_source = resolve_package_slug(plugin_dir, output_dir, explicit_slug=package_name, metadata=metadata)
+
     zip_filename = f"{plugin_slug}_v{current_version}.zip"
     canonical_zip = output_dir / f"{plugin_slug}.zip"
     versioned_zip = output_dir / zip_filename
@@ -186,7 +239,7 @@ def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_
                 files_to_pack.append(rel_path)
 
     print(f"📦 Packaging {len(files_to_pack)} files into release archive...")
-    print(f"📁 Internal root folder name: `{plugin_slug}/`")
+    print(f"📁 Internal root folder name: `{plugin_slug}/` (resolved from {slug_source})")
 
     for target_zip in [versioned_zip, canonical_zip]:
         with zipfile.ZipFile(target_zip, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -209,6 +262,7 @@ def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_
 
     print("\n✅ Verification Successful!")
     print(f"  • Plugin Name:     {metadata.get('name')}")
+    print(f"  • Package Slug:    {plugin_slug} (resolved via {slug_source})")
     print(f"  • Version:         {current_version}")
     print(f"  • Author:          {metadata.get('author')} ({metadata.get('email')})")
     print(f"  • QGIS Minimum:    {metadata.get('qgisminimumversion')}")

@@ -19,12 +19,12 @@ Eliminates packaging rejections, enforces semantic versioning, guarantees the gr
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                           THE 4 INVARIANTS                                             │
 ├──────────────────────────┬──────────────────────────┬──────────────────────────┬───────────────────────┤
-│ 1. SINGLE-ROOT DIRECTORY │ 2. ZERO RAW `%` IN INI   │ 3. CLASSFACTORY HOOK     │ 4. QT6 / QGIS 4 SCOPING│
+│ 1. ROOT SLUG CONTINUITY  │ 2. ZERO RAW `%` IN INI   │ 3. CLASSFACTORY HOOK     │ 4. QT6 / QGIS 4 SCOPING│
 │ The ZIP file MUST have a │ Python's configparser    │ `__init__.py` MUST       │ All enums must be     │
-│ single top-level folder: │ treats `%` as variable   │ define:                  │ scoped and imported via│
-│ `plugin_name/metadata...`│ interpolation.           │ ```python                │ `qgis.PyQt` shim to   │
-│ NEVER zip files at root! │ Use `percent` or `%%`    │ def classFactory(iface): │ earn the green        │
-│                          │ in `metadata.txt`.       │     return MyPlugin(iface│ "QGIS 4 Ready" badge. │
+│ single top folder that   │ treats `%` as variable   │ define:                  │ scoped and imported via│
+│ matches the portal's     │ interpolation.           │ ```python                │ `qgis.PyQt` shim to   │
+│ original package_name!   │ Use `percent` or `%%`    │ def classFactory(iface): │ earn the green        │
+│ NEVER zip files at root! │ in `metadata.txt`.       │     return MyPlugin(iface│ "QGIS 4 Ready" badge. │
 │                          │                          │ ```                      │                       │
 └──────────────────────────┴──────────────────────────┴──────────────────────────┴───────────────────────┘
 ```
@@ -133,17 +133,28 @@ Run the deterministic packaging engine:
 # Package current version (automatically runs Qt6 validation gate)
 python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir>
 
-# OR automatically bump patch version and package:
+# Automatically bump patch version and package:
 python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --bump patch
+
+# Explicitly override internal package folder name:
+python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --package-name <slug>
 
 # (Optional) Bypass Qt6 check if packaging legacy QGIS 2/3-only branch:
 python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --skip-qt6
 ```
 
+#### Deterministic Package Name Resolution Ladder:
+To guarantee that the root folder inside the ZIP always matches the portal's registered `package_name` (avoiding `Plugin folder name mismatch` rejections), `package_qgis.py` evaluates this 5-rung ladder:
+1. **CLI Flag (`--package-name <slug>`)**: Highest priority manual override.
+2. **Metadata Key (`package_name=<slug>` in `metadata.txt`)**: **Recommended Best Practice.** Setting `package_name` in `metadata.txt` locks the canonical package name into git as the SSOT.
+3. **Previous Release Archive Inspection (`dist/*.zip`)**: Automatically inspects existing release archives in `dist/` and adopts the prior root prefix to guarantee 100% version-to-version continuity.
+4. **Git Wrapper Affix Stripping**: Automatically detects and strips common git wrapper prefixes (`qgis-*`, `qgis_*`) or suffixes (`*-qgis`, `*-plugin`).
+5. **Folder Name**: Sanitized lowercase directory name fallback.
+
 #### What this script guarantees:
-1. **Mandatory Qt6 Gate**: Validates all Python files against the AST compliance visitor before creating archive.
-2. **Metadata Validation**: Validates all required fields, INI syntax, and escapes invalid characters.
-3. **Single-Root Architecture**: Packages all source files into a single root directory inside `dist/<plugin_slug>_v<version>.zip`.
+1. **Root Slug Continuity**: Enforces exact root folder name matching across all version releases.
+2. **Mandatory Qt6 Gate**: Validates all Python files against the AST compliance visitor before creating archive.
+3. **Metadata Validation**: Validates all required fields, INI syntax, and escapes invalid characters.
 4. **Build Debris Elimination**: Automatically strips `__pycache__`, `.git`, `.DS_Store`, `test_*.py`, and scratch files.
 5. **Post-Build Unzip Verification**: Performs immediate unzip verification to confirm zero orphan files exist at the zip root.
 
@@ -178,6 +189,7 @@ python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --skip-q
 
 | Error Message on Portal | Root Cause | Instant Fix |
 | :--- | :--- | :--- |
+| `Plugin folder name mismatch: ... (X) is different from the original (Y)` | The original version was registered with root folder `Y`, but current package uses `X`. | Add `package_name=Y` to `metadata.txt` (or run `package_qgis.py <dir> --package-name Y`). Re-package and upload. |
 | `Qt6 Check [N issues]` (Red Tab) | Unscoped Qt enums (e.g. `Qt.AlignCenter`) or direct `PyQt5` import | Run `python .agents/skills/publish-qgis/scripts/check_qt6.py <plugin_dir>` to list exact lines and replacements. Re-package and upload. |
 | `Errors parsing metadata.txt. '%' must be followed by '%' or '('` | Raw unescaped `%` in `description` or `about` | Replace `%` with `percent` or `%%` in `metadata.txt`. |
 | `Zip file must contain a single top-level directory` | Zipped loose files without parent folder | Use `package_qgis.py` which automatically prefixes all archive paths with `<plugin_slug>/`. |
