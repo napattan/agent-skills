@@ -110,7 +110,7 @@ def validate_metadata(meta_path: Path) -> dict:
     return metadata
 
 
-def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_qt6: bool = False) -> Path:
+def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_qt6: bool = False, package_name: str = "") -> Path:
     """Validate, optionally bump version, and package into compliant zip."""
     plugin_dir = plugin_dir.resolve()
     meta_path = plugin_dir / "metadata.txt"
@@ -161,10 +161,14 @@ def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_
         metadata = validate_metadata(meta_path)
 
     # Derive internal top-level directory name
-    # Default to folder name or slugified metadata name
-    folder_name = plugin_dir.name
-    # Clean slug
-    plugin_slug = re.sub(r"[^a-zA-Z0-9_]", "_", folder_name).lower()
+    # Priority: explicit argument -> metadata.txt 'package_name' -> folder name
+    if package_name:
+        plugin_slug = package_name.strip()
+    elif "package_name" in metadata:
+        plugin_slug = metadata["package_name"].strip()
+    else:
+        folder_name = plugin_dir.name
+        plugin_slug = re.sub(r"[^a-zA-Z0-9_]", "_", folder_name).lower()
 
     output_dir.mkdir(parents=True, exist_ok=True)
     zip_filename = f"{plugin_slug}_v{current_version}.zip"
@@ -221,13 +225,14 @@ def main():
     parser.add_argument("--output-dir", default="", help="Destination directory for built zip (default: <plugin_dir>/dist)")
     parser.add_argument("--bump", choices=["none", "patch", "minor", "major"], default="none", help="Bump version in metadata.txt before packaging")
     parser.add_argument("--skip-qt6", action="store_true", help="Bypass Qt6 / QGIS 4 forward-compatibility gate")
+    parser.add_argument("--package-name", "--folder-name", default="", help="Internal root package directory name inside zip (overrides folder name)")
     args = parser.parse_args()
 
     pdir = Path(args.plugin_dir)
     out_dir = Path(args.output_dir) if args.output_dir else (pdir / "dist")
 
     try:
-        zip_path = package_plugin(pdir, out_dir, bump=args.bump, skip_qt6=args.skip_qt6)
+        zip_path = package_plugin(pdir, out_dir, bump=args.bump, skip_qt6=args.skip_qt6, package_name=args.package_name)
         print("\n🚀 Next Steps:")
         print("1. Log in to https://plugins.qgis.org/")
         print("2. Navigate to https://plugins.qgis.org/plugins/add/ (or click '+ Add version' on your plugin page)")
