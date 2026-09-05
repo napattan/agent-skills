@@ -11,11 +11,28 @@ import re
 import zipfile
 import argparse
 import configparser
+import importlib.util
 from pathlib import Path
 
 # Enforce UTF-8 standard output
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
+
+# Dynamically import check_qt6 if available
+try:
+    from .check_qt6 import audit_directory_for_qt6
+except (ImportError, ValueError):
+    try:
+        from check_qt6 import audit_directory_for_qt6
+    except ImportError:
+        _check_script = Path(__file__).parent / "check_qt6.py"
+        if _check_script.exists():
+            _spec = importlib.util.spec_from_file_location("check_qt6", str(_check_script))
+            _mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_mod)
+            audit_directory_for_qt6 = _mod.audit_directory_for_qt6
+        else:
+            audit_directory_for_qt6 = None
 
 REQUIRED_METADATA_FIELDS = [
     "name", "qgisMinimumVersion", "description", "about", "version", "author", "email"
@@ -93,7 +110,7 @@ def validate_metadata(meta_path: Path) -> dict:
     return metadata
 
 
-def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none") -> Path:
+def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none", skip_qt6: bool = False) -> Path:
     """Validate, optionally bump version, and package into compliant zip."""
     plugin_dir = plugin_dir.resolve()
     meta_path = plugin_dir / "metadata.txt"
@@ -106,6 +123,20 @@ def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none") -> Pa
     init_content = init_path.read_text(encoding="utf-8", errors="ignore")
     if "classFactory" not in init_content:
         raise ValueError("`__init__.py` must define `classFactory(iface)` as required by QGIS plugin architecture.")
+
+    # Mandatory Qt6 / QGIS 4 forward-compatibility check
+    if not skip_qt6 and audit_directory_for_qt6:
+        print("🔍 Running Qt6 / QGIS 4 forward-compatibility scan...")
+        qt6_issues = audit_directory_for_qt6(plugin_dir)
+        blocking_qt6 = [issue for issue in qt6_issues if issue[3] == "ERROR"]
+        if blocking_qt6:
+            print(f"\n❌ Qt6 / QGIS 4 Compatibility Check FAILED ({len(blocking_qt6)} blocking issues):", file=sys.stderr)
+            for rel_path, line, col, severity, msg in blocking_qt6:
+                print(f"  • {rel_path}:{line}:{col} [{severity}] {msg}", file=sys.stderr)
+            print("\n💡 plugins.qgis.org will flag these issues and deny the 'QGIS 4 Ready' badge.", file=sys.stderr)
+            print("   Fix unscoped enums / direct PyQt5 imports, or pass --skip-qt6 to bypass.", file=sys.stderr)
+            raise RuntimeError(f"Qt6 forward-compatibility scan failed with {len(blocking_qt6)} errors.")
+        print("  ✓ Qt6 / QGIS 4 compatibility verified (100% QGIS 4 Ready compliant)")
 
     metadata = validate_metadata(meta_path)
     current_version = metadata["version"]
@@ -177,6 +208,7 @@ def package_plugin(plugin_dir: Path, output_dir: Path, bump: str = "none") -> Pa
     print(f"  • Version:         {current_version}")
     print(f"  • Author:          {metadata.get('author')} ({metadata.get('email')})")
     print(f"  • QGIS Minimum:    {metadata.get('qgisminimumversion')}")
+    print(f"  • Qt6 / QGIS 4:    {'Bypassed (--skip-qt6)' if skip_qt6 else '100% Compliant (QGIS 4 Ready)'}")
     print(f"  • Output Archive:  {versioned_zip} ({versioned_zip.stat().st_size} bytes)")
     print(f"  • Canonical Zip:   {canonical_zip} ({canonical_zip.stat().st_size} bytes)")
 
@@ -188,13 +220,14 @@ def main():
     parser.add_argument("plugin_dir", help="Path to plugin directory containing metadata.txt and __init__.py")
     parser.add_argument("--output-dir", default="", help="Destination directory for built zip (default: <plugin_dir>/dist)")
     parser.add_argument("--bump", choices=["none", "patch", "minor", "major"], default="none", help="Bump version in metadata.txt before packaging")
+    parser.add_argument("--skip-qt6", action="store_true", help="Bypass Qt6 / QGIS 4 forward-compatibility gate")
     args = parser.parse_args()
 
     pdir = Path(args.plugin_dir)
     out_dir = Path(args.output_dir) if args.output_dir else (pdir / "dist")
 
     try:
-        zip_path = package_plugin(pdir, out_dir, bump=args.bump)
+        zip_path = package_plugin(pdir, out_dir, bump=args.bump, skip_qt6=args.skip_qt6)
         print("\n🚀 Next Steps:")
         print("1. Log in to https://plugins.qgis.org/")
         print("2. Navigate to https://plugins.qgis.org/plugins/add/ (or click '+ Add version' on your plugin page)")
