@@ -45,7 +45,7 @@ Before packaging, run `/publish-audit` with the QGIS platform profile:
 ```bash
 python .agents/skills/publish-audit/scripts/audit_engine.py <plugin_dir> --platform qgis
 ```
-* **Verify**: Zero detected API keys, zero hardcoded developer machine paths (`C:\Users\...`, `/Users/...`), zero unhandled `B110: try_except_pass` blocks, and zero unescaped `%` symbols in `metadata.txt`.
+* **Verify**: Zero detected API keys, zero hardcoded developer machine paths (`C:\Users\<user>\...`, `/Users/<user>/...`), zero unhandled `B110: try_except_pass` blocks, and zero unescaped `%` symbols in `metadata.txt`.
 
 ---
 

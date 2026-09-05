@@ -85,7 +85,7 @@ detect-secrets scan <target_dir>
 Categorize all identified findings into two tiers:
 1. **BLOCKING ERRORS (Must fix before release)**:
    - Any detected API key, token, private key, or database password.
-   - Any hardcoded developer machine path (`C:\Users\...`, `/Users/...`).
+   - Any hardcoded developer machine path (`C:\Users\<user>\...`, `/Users/<user>/...`).
    - Unescaped `%` in QGIS `metadata.txt`.
    - Python `SyntaxError` or `F821` (undefined variable).
    - Insecure `shell=True` or `eval()` / `exec()` calls without explicit design justification.
