@@ -96,7 +96,7 @@ Looking for automated MCP bridges for CAD, Parametric Modeling, GIS, and Vector 
 *Computational Design Technologist | Spatial Analytics • Urban & Environmental Simulation • Workflow Automation*
 
 * **GitHub**: [@napattan](https://github.com/napattan)
-* **LinkedIn**: [Napat Phasundhiae](https://www.linkedin.com/in/napat-phasundhiae)
+* **LinkedIn**: [Napat Phasundhiae](https://www.linkedin.com/in/napatphas/)
 
 ---
 
