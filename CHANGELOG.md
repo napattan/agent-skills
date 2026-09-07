@@ -2,13 +2,32 @@
 
 ## v1.0.0
 
-First tagged public line of this skill suite. Skills are host-agnostic: Claude Code, Grok, Gemini/Antigravity, Cursor, Codex, and similar SKILL.md loaders; IDE or CLI; Windows, macOS, and Linux.
+First tagged public line of this skill suite.
 
-### Changed
-- `/update-doc` starts from **this chat**, then scans markdown and HTML in the **current workspace**. No baked-in project file list. A project may add its own `scripts/audit_docs.py`. The old thesis HTML auditor is **not** in this package.
-- `/create-skill` discovers common skill roots (`.agents`, `.grok`, `~/.claude`, `~/.grok`, `~/.gemini/config`) and writes a full SKILL.md after the description is approved. Not a thin stub. Not Gemini-only.
-- `/boostx` feature-detects host tools. It does not require Antigravity-only APIs. Task classes: code, docs, audit.
-- `/publish-audit` scans `.env`, `.ps1`, `.sh`, `.toml`. GitHub without LICENSE is blocking. Food4Rhino without `.gha`/`.dll` is blocking. README words like Published / LIVE / 1-click are advisory. Platforms are generic, qgis, food4rhino, github only (no PyPI/NPM claim).
+**Who it is for:** anyone who wants the same `/boostx`, `/create-skill`, `/update-doc`, `/publish-audit`, and `/publish-qgis` behavior on Claude Code, Grok, Gemini/Antigravity, Cursor, or Codex, in an IDE or a CLI, on Windows, macOS, or Linux.
+
+**Who it is not for:** a drop-in thesis-workspace auditor. That HTML checker is not in this package. Add `scripts/audit_docs.py` in **your** repo if you need extra checks.
+
+### Skills in this release
+
+| Command | Role in v1.0.0 |
+|:---|:---|
+| `/boostx` | Red / Ponytail / dual-OS / green. Task classes: code, docs, audit. Host tools are optional. |
+| `/create-skill` | Discover skill roots, approve description, write a full SKILL.md. |
+| `/update-doc` | Chat delta + workspace markdown/HTML scan + relation sync + zero-stale grep. |
+| `/publish-audit` | Pre-flight engine for generic, qgis, food4rhino, github. |
+| `/publish-qgis` | QGIS zip / SemVer / Qt6 packager (unchanged role; still the zip SSOT). |
+
+### Changed (vs untagged `main` before this tag)
+
+- `/update-doc` no longer assumes one author's filenames or a bundled thesis HTML auditor.
+- `/create-skill` is not Gemini-only and does not stop at a stub README.
+- `/boostx` does not require Antigravity `invoke_subagent` / `DeepCoder` / `manage_task`.
+- `/publish-audit` scans `.env` and shell/toml; GitHub LICENSE and Food4Rhino `.gha` are blocking; README overclaim is advisory; no PyPI/NPM platform claim.
 
 ### Install
-Clone `skills/` into your host skill root. See README. Tag: `v1.0.0`.
+
+See README. Tag: `v1.0.0`.
+```bash
+git clone --branch v1.0.0 https://github.com/napattan/agent-skills.git
+```

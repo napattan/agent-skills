@@ -1,20 +1,21 @@
-# ⚡ Agent Skills
+# Agent Skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/napattan/agent-skills/releases/tag/v1.0.0)
 [![Platforms](https://img.shields.io/badge/Platforms-Claude_•_Grok_•_Gemini_•_Cursor_•_Codex-8A2BE2)](#-universal-installation)
-[![Dual-OS](https://img.shields.io/badge/Dual--OS-Windows_•_macOS_•_Linux-success)](#-the-boostx-engineering-discipline)
-[![Verification](https://img.shields.io/badge/Protocol-BoostX_Verified-emerald)](#-the-boostx-engineering-discipline)
+[![Dual-OS](https://img.shields.io/badge/Dual--OS-Windows_•_macOS_•_Linux-success)](#-portable-by-design)
+[![Verification](https://img.shields.io/badge/Protocol-BoostX_Verified-emerald)](#-portable-by-design)
 
-> Portable developer protocols for AI coding assistants (Claude Code, Grok, Gemini/Antigravity, Cursor, Codex, and similar), IDE or CLI, Windows, macOS, and Linux.
+> **Portable developer protocols for AI coding assistants.**  
+> Same SKILL.md files on Claude Code, Grok, Gemini/Antigravity, Cursor, Codex, and similar loaders. IDE or CLI. Windows, macOS, and Linux. Not locked to one machine or one repo.
+
+Sister repo: **[mcp-bridges](https://github.com/napattan/mcp-bridges)** (QGIS, Rhino, Grasshopper, Illustrator, Figma).
 
 ---
 
-## 🚀 Universal 1-Line Installation
+## Universal installation
 
-Install into your preferred AI agent environment with one command:
-
-Clone this repo, then copy or link the `skills/` folder into **your host's skill root**. Same SKILL.md files; the host only cares where they sit.
+Clone this repository, then put the `skills/` folder into **your host's skill root**. The files do not change per host.
 
 | Host | Typical skill root |
 |:---|:---|
@@ -24,90 +25,92 @@ Clone this repo, then copy or link the `skills/` folder into **your host's skill
 | Cursor / Codex / other IDEs | often `<repo>/.agents/skills` |
 
 ```bash
-# Claude Code (POSIX)
 git clone https://github.com/napattan/agent-skills.git ~/.claude/skills
-
-# Grok (POSIX)
 git clone https://github.com/napattan/agent-skills.git ~/.grok/skills
-
-# Gemini / Antigravity (POSIX)
 git clone https://github.com/napattan/agent-skills.git ~/.gemini/config/skills
-
-# Project (many IDEs)
 git clone https://github.com/napattan/agent-skills.git .agents/skills
 ```
 
-Windows PowerShell examples use `$env:USERPROFILE\.claude\skills`, `$env:USERPROFILE\.grok\skills`, `$env:USERPROFILE\.gemini\config\skills`.
+Windows PowerShell: `$env:USERPROFILE\.claude\skills`, `$env:USERPROFILE\.grok\skills`, `$env:USERPROFILE\.gemini\config\skills`.
 
-Or run `scripts/install.ps1` / `scripts/install.sh` (copies into roots that already exist on this machine).
+Or run `scripts/install.ps1` (Windows) / `scripts/install.sh` (macOS, Linux). The installer copies into roots that already exist on this machine (`--claude`, `--grok`, `--antigravity`, or a workspace path).
 
----
-
-## 📦 The Core Suite
-
-| Skill | Command | Description | What It Solves |
-| :--- | :---: | :--- | :--- |
-| **BoostX Protocol** | `/boostx` | **High-discipline root-cause engineering protocol**. Enforces a mandatory 4-phase lifecycle: (1) Red Invariant Gate, (2) Ponytail Anti-Bloat Ladder, (3) Dual-OS Surgical Standards, and (4) Ruthless 3-Tier Verification. | Stops AI agents from writing speculative code, guessing at bug symptoms, or introducing bloated abstractions. |
-| **Skill Creator** | `/create-skill` | Scaffold a portable SKILL.md for the current host (Claude, Grok, Gemini, Codex, Cursor). Full skill after description approval; dual-OS; no machine-user paths. | Stops thin stubs, wrong install folders, and host-only drafts. |
-| **Release Pre-Flight** | `/publish-audit` | **Automated security, secret, privacy & packaging audit**. Scans codebases for leaked API keys, tokens, private keys, Bandit vulnerabilities, Flake8 errors, hardcoded machine paths, and platform rules (QGIS, Food4Rhino, GitHub). | Prevents credential leaks, server interpolation errors, security flags, and broken release packages before going public. |
-| **QGIS Publisher** | `/publish-qgis` | **Deterministic QGIS plugin release packager & manager**. Validates `metadata.txt` against INI interpolation bugs, enforces single-root folder zip structure, manages SemVer bumps, runs AST-level Qt6 / QGIS 4 forward-compatibility checks ('QGIS 4 Ready' badge), and resolves package slugs via a 5-rung continuity ladder. | Eliminates plugin portal upload rejections, `%` interpolation crashes, folder name mismatches, and Qt6 deprecation blocks. |
-| **Doc Synchronizer** | `/update-doc` | Sync docs from **this chat** plus markdown/HTML in the **current workspace**. No baked-in project file list. | Stops stale claims after a change, on any repo. |
+Pin a known line with the tag: `git clone --branch v1.0.0 https://github.com/napattan/agent-skills.git`
 
 ---
 
-## 🛡️ The BoostX Engineering Discipline
-
-Every skill in this repository is built to eliminate the common failure modes of AI tools (context bloat, undertriggering, hardcoded environment paths, and broken links):
+## The suite
 
 ```
-┌────────────────────────────────────────────────────────┐
-│  1. THE RED INVARIANT GATE                             │
-│     • Explicit failure modes defined before creation   │
-│     • Positive trigger keywords + negative exclusions  │
-│     • Context budget: YAML description ≤ 1024 chars    │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-┌──────────────────────────▼─────────────────────────────┐
-│  2. PONYTAIL ANTI-BLOAT LADDER                         │
-│     • Prefer Markdown instructions over custom scripts │
-│     • Reuse existing CLI tools & shell utilities       │
-│     • Shortest working instructions win                │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-┌──────────────────────────▼─────────────────────────────┐
-│  3. DUAL-OS PORTABILITY INVARIANTS                     │
-│     • Zero machine-specific absolute paths (`C:\...`)  │
-│     • Universal POSIX forward slashes (`/`) in links   │
-│     • UTF-8 stream reconfigured for Windows terminals  │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-┌──────────────────────────▼─────────────────────────────┐
-│  4. RUTHLESS 3-TIER VERIFICATION                       │
-│     • Tier 1: Static YAML frontmatter & regex linting  │
-│     • Tier 2: Link target existence & secret audit     │
-│     • Tier 3: Physical directory & slash menu proof    │
-└────────────────────────────────────────────────────────┘
+agent-skills/skills/
+├── /boostx           high-discipline bugs and code changes
+├── /create-skill     author a portable SKILL.md for the current host
+├── /update-doc       sync markdown/HTML from this chat + this workspace
+├── /publish-audit    pre-flight secrets, paths, GitHub / QGIS / Food4Rhino
+└── /publish-qgis     QGIS plugin zip, SemVer, Qt6 / QGIS 4 checks
+```
+
+| Skill | Command | What it does | What it stops |
+|:---|:---|:---|:---|
+| **BoostX** | `/boostx` | Red gate, Ponytail short-diff ladder, dual-OS edits, green verification. Task classes: **code** (failing command), **docs** (stale-claim grep), **audit** (engine exit code). Uses host subagents/background tools **if they exist**; never requires a vendor API name. | Speculative patches, fake unit tests on doc work, Antigravity-only instructions on Grok/Claude/Codex |
+| **Create Skill** | `/create-skill` | Picks a skill root (project `.agents` / `.grok` or user `~/.claude` / `~/.grok` / `~/.gemini/config`). Drafts YAML `description`, waits for approval, writes a **full** SKILL.md (not a stub). Dual-OS mkdir. No machine-user paths. | Thin drafts, wrong folder, Gemini-only or Grok-only write paths |
+| **Update Doc** | `/update-doc` | (1) Ground-truth delta from **this chat**. (2) Scan markdown and HTML in the **current workspace**. (3) Follow relations (symbols, metrics, status words, links). (4) 5-tier inner-to-outer sync. (5) Re-grep deprecated terms to zero. Optional: run **your** `scripts/audit_docs.py` if you added one. | Stale claims, hardcoded file lists from someone else's repo, "update everything on disk" |
+| **Publish Audit** | `/publish-audit` | `python scripts/audit_engine.py <dir> --platform generic\|qgis\|food4rhino\|github`. Secrets (masked), machine paths, `.env` / `.ps1` / `.sh` / `.toml`. GitHub missing LICENSE = blocking. Food4Rhino missing `.gha`/`.dll` = blocking. README "Published" / "LIVE" / "1-click" = advisory. | Credential leaks, unescaped `%` in QGIS `metadata.txt`, claiming PyPI/NPM without a profile |
+| **Publish QGIS** | `/publish-qgis` | SemVer, `metadata.txt` interpolation, single-root zip, Qt6 / QGIS 4 AST check, package slug ladder. Run **after** `/publish-audit` is green. | Plugin portal zip rejections, Qt6 deprecations, folder-name mismatches |
+
+Public status words (owned by `/update-doc`): **LIVE**, **REGISTERED**, **PREPARED**, **IN PIPELINE**, **DRAFT**. Do not write LIVE or 1-click install without a receipt.
+
+---
+
+## Portable by design
+
+- **Any host:** feature-detect tools. Never require `invoke_subagent`, `DeepCoder`, `manage_task`, or other vendor-only names.
+- **Any OS:** POSIX `/` in files; PowerShell and POSIX examples, or Python stdlib. No `C:\Users\<you>` in published text.
+- **Any repo:** `/update-doc` does not ship a thesis auditor or a baked-in filename list. Your project may add `scripts/audit_docs.py`.
+- **Typography for user-facing/release copy:** no em/en dashes (ASCII hyphen is fine). No LaTeX.
+
+BoostX ladder (used by all skills here): YAGNI, reuse, stdlib, shortest diff. YAML `description` stays short, with a `Do NOT use for` clause.
+
+---
+
+## Repository layout
+
+```
+agent-skills/
+├── README.md
+├── CHANGELOG.md
+├── LICENSE
+├── skills/
+│   ├── boostx/SKILL.md
+│   ├── create-skill/SKILL.md
+│   ├── update-doc/SKILL.md
+│   ├── publish-audit/
+│   │   ├── SKILL.md
+│   │   └── scripts/audit_engine.py
+│   └── publish-qgis/
+│       ├── SKILL.md
+│       └── scripts/check_qt6.py, package_qgis.py
+└── scripts/
+    ├── install.sh
+    └── install.ps1
 ```
 
 ---
 
-## 🔗 Related Toolkits
+## Related toolkits
 
-Looking for automated MCP bridges for CAD, Parametric Modeling, GIS, and Vector Graphics? Check out our sister repository:
-* 🏛️ **[mcp-bridges](https://github.com/napattan/mcp-bridges)**: Production-grade MCP bridges for **Rhino, Grasshopper, QGIS, Adobe Illustrator, and Figma**.
+- **[mcp-bridges](https://github.com/napattan/mcp-bridges):** MCP bridges for **QGIS, Rhino 3D, Grasshopper, Adobe Illustrator, and Figma**.
 
 ---
 
-## 👤 Author
+## Author
 
 **Napat Phasundhiae**  
 *Computational Design Technologist | Spatial Analytics • Urban & Environmental Simulation • Workflow Automation*
 
-* **GitHub**: [@napattan](https://github.com/napattan)
-* **LinkedIn**: [Napat Phasundhiae](https://www.linkedin.com/in/napatphas/)
+- GitHub: [@napattan](https://github.com/napattan)
+- LinkedIn: [linkedin.com/in/napatphas](https://www.linkedin.com/in/napatphas/)
 
----
+## License
 
-## 📄 License
-
-This repository is open-source under the [MIT License](LICENSE).
+[MIT License](LICENSE)
