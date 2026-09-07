@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Universal Package & Release Pre-Flight Audit Engine.
-Performs comprehensive secret, privacy, security, quality, and platform-specific audits
-prior to releasing to GitHub, QGIS, Food4Rhino, PyPI, or NPM.
+Performs secret, privacy, security, quality, and platform-specific audits
+prior to releasing to GitHub, QGIS, or Food4Rhino.
 """
 
 import sys
@@ -25,6 +25,7 @@ SECRET_PATTERNS = [
     ("AWS Access Key ID", re.compile(r"(?i)\b(AKIA[0-9A-Z]{16})\b")),
     ("GitHub Personal Access Token", re.compile(r"\b(ghp_[0-9a-zA-Z]{36}|gho_[0-9a-zA-Z]{36}|github_pat_[0-9a-zA-Z_]{82})\b")),
     ("OpenAI API Key", re.compile(r"\b(sk-[a-zA-Z0-9]{20,}|sk-proj-[a-zA-Z0-9_\-]{20,})\b")),
+    ("Anthropic API Key", re.compile(r"\bsk-ant-[a-zA-Z0-9\-_]{20,}\b")),
     ("Google API Key", re.compile(r"\b(AIza[0-9A-Za-z\-_]{35})\b")),
     ("Slack API Token", re.compile(r"\b(xox[baprs]-[0-9a-zA-Z]{10,48})\b")),
     ("RSA/SSH Private Key", re.compile(r"-----BEGIN (?:RSA|OPENSSH|DSA|EC|PGP) PRIVATE KEY-----")),
@@ -228,9 +229,34 @@ def run_audit(target_dir: str, platform: str = "generic") -> AuditResult:
             result.add_warning(f"Forbidden or build artifact file present in package: `{f.name}`", str(f))
 
     # 2. Scan file content (secrets, machine paths)
+    content_suffixes = {
+        ".py", ".txt", ".md", ".json", ".yml", ".yaml", ".ini", ".cs",
+        ".xml", ".html", ".env", ".ps1", ".sh", ".toml", ".cfg", ".conf",
+    }
+    overclaim = re.compile(
+        r"(?i)\b(published|1-click install|status:\s*live)\b"
+    )
     for f in all_files:
-        if f.is_file() and f.suffix.lower() in {".py", ".txt", ".md", ".json", ".yml", ".yaml", ".ini", ".cs", ".xml", ".html"}:
+        if not f.is_file():
+            continue
+        suffix = f.suffix.lower()
+        name = f.name.lower()
+        if suffix in content_suffixes or name in {".env", "env"}:
             audit_file_content(f, result)
+        if suffix == ".md" and name.startswith("readme"):
+            try:
+                text = f.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                text = ""
+            for i, line in enumerate(text.splitlines(), 1):
+                if overclaim.search(line) and "pending" not in line.lower() and "registered" not in line.lower():
+                    result.add_warning(
+                        "README may overclaim public availability (Published / LIVE / 1-click). "
+                        "Use REGISTERED / PREPARED / IN PIPELINE unless a receipt exists. "
+                        "Vocabulary is owned by /update-doc; this is advisory.",
+                        str(f),
+                        i,
+                    )
 
     # 3. Scan Python AST
     py_files = [f for f in all_files if f.suffix.lower() == ".py" and not f.name.startswith("test_")]
@@ -247,33 +273,32 @@ def run_audit(target_dir: str, platform: str = "generic") -> AuditResult:
         if dist_dir.exists():
             zips = list(dist_dir.glob("*.zip"))
             if zips:
-                import zipfile
-                for zp in zips:
-                    with zipfile.ZipFile(zp, "r") as zf:
-                        names = zf.namelist()
-                        root_dirs = {n.split("/")[0] for n in names if "/" in n}
-                        if len(root_dirs) != 1 or any("/" not in n and not n.endswith("/") for n in names if n != root_dirs.copy().pop()):
-                            # check if files exist at root
-                            root_files = [n for n in names if "/" not in n and n]
-                            if root_files:
-                                result.add_blocking(f"Release ZIP `{zp.name}` violates QGIS single-root directory rule! Files found at root: {root_files}", str(zp))
+                result.add_warning(
+                    "dist/*.zip present. For QGIS single-root zip shape and Qt6 checks, run /publish-qgis. "
+                    "This audit does not reimplement zip packaging."
+                )
 
     elif platform.lower() == "food4rhino":
-        # Check for compiled .gha or .dll
         assemblies = list(target.glob("**/*.gha")) + list(target.glob("**/*.dll"))
         sample_gh = list(target.glob("**/*.gh"))
         if not assemblies:
-            result.add_warning("No compiled `.gha` or `.dll` assembly found. Food4Rhino releases require a compiled plugin assembly.")
+            result.add_blocking(
+                "No compiled `.gha` or `.dll` found. Food4Rhino requires a compiled plugin assembly."
+            )
         if not sample_gh:
-            result.add_warning("No sample `.gh` benchmark canvas found. Recommended for Food4Rhino user adoption.")
+            result.add_warning("No sample `.gh` canvas found. Recommended for Food4Rhino.")
 
-    # 5. Check License & README
+    # 5. License & README
     has_readme = any(f.name.lower().startswith("readme") for f in all_files)
     has_license = any(f.name.lower().startswith("license") for f in all_files)
+    plat = platform.lower()
     if not has_readme:
-        result.add_warning("Missing `README.md` documentation file.")
+        result.add_warning("Missing README.md.")
     if not has_license:
-        result.add_warning("Missing open-source `LICENSE` file.")
+        if plat == "github":
+            result.add_blocking("Missing LICENSE. GitHub platform profile requires an OSI-style LICENSE file.")
+        else:
+            result.add_warning("Missing LICENSE file.")
 
     return result
 
@@ -287,28 +312,30 @@ def main():
     res = run_audit(args.target, platform=args.platform)
 
     print("=" * 70)
-    print("📋 AUDIT SUMMARY REPORT")
+    print("PRE-FLIGHT AUDIT")
     print("=" * 70)
-    print(f"Files Scanned: {res.files_scanned}")
-    print(f"Blocking Errors: {len(res.blocking_errors)}")
-    print(f"Warnings: {len(res.warnings)}")
+    print(f"Target:    {args.target}")
+    print(f"Platform:  {args.platform}")
+    print(f"Files:     {res.files_scanned}")
+    print(f"Blocking:  {len(res.blocking_errors)}")
+    print(f"Advisory:  {len(res.warnings)}")
     print("-" * 70)
 
     if res.blocking_errors:
-        print("\n❌ BLOCKING ERRORS (Must fix before publishing):")
+        print("\nBLOCKING (must fix before publishing):")
         for err in res.blocking_errors:
-            print(f"  ✗ {err}")
+            print(f"  x {err}")
 
     if res.warnings:
-        print("\n⚠️  WARNINGS / ADVISORIES (Recommended to review):")
+        print("\nADVISORY:")
         for warn in res.warnings:
-            print(f"  • {warn}")
+            print(f"  - {warn}")
 
     if res.passed and not res.blocking_errors:
-        print("\n✨ ALL GATES PASSED! Package is safe and compliant for publishing.")
+        print("\nVERDICT: PASS (safe to publish for this platform)")
         sys.exit(0)
     else:
-        print("\n🚫 AUDIT FAILED. Resolve blocking errors before publishing.")
+        print("\nVERDICT: FAIL (resolve blocking errors before publishing)")
         sys.exit(1)
 
 

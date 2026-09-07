@@ -6,7 +6,7 @@
 [![Verification](https://img.shields.io/badge/Protocol-BoostX_Verified_✓-emerald)](#-the-boostx-engineering-discipline)
 
 > **High-discipline developer protocols & reasoning engines for AI coding assistants.**  
-> Solves tricky bugs, compiles predictable agent skills, and synchronizes multi-file codebases across **Claude Code**, **Google Antigravity**, **Cursor**, and **Codex**.
+> Portable developer protocols for AI coding assistants (Claude Code, Grok, Gemini/Antigravity, Cursor, Codex, and similar), IDE or CLI, Windows, macOS, and Linux.
 
 ---
 
@@ -14,24 +14,32 @@
 
 Install into your preferred AI agent environment with one command:
 
-### 1. Claude Code (CLI)
+Clone this repo, then copy or link the `skills/` folder into **your host's skill root**. Same SKILL.md files; the host only cares where they sit.
+
+| Host | Typical skill root |
+|:---|:---|
+| Claude Code | `~/.claude/skills` or `<repo>/.claude/skills` |
+| Grok | `$GROK_HOME/skills` or `~/.grok/skills` or `<repo>/.grok/skills` |
+| Gemini / Antigravity | `~/.gemini/config/skills` |
+| Cursor / Codex / other IDEs | often `<repo>/.agents/skills` |
+
 ```bash
+# Claude Code (POSIX)
 git clone https://github.com/napattan/agent-skills.git ~/.claude/skills
-```
 
-### 2. Google Antigravity / Gemini Code Assist
-```bash
-# Windows PowerShell
-git clone https://github.com/napattan/agent-skills.git "$env:USERPROFILE\.gemini\config\skills"
+# Grok (POSIX)
+git clone https://github.com/napattan/agent-skills.git ~/.grok/skills
 
-# macOS / Linux
+# Gemini / Antigravity (POSIX)
 git clone https://github.com/napattan/agent-skills.git ~/.gemini/config/skills
-```
 
-### 3. Workspace-Local (Any AI IDE: Cursor, Windsurf, Codex, Antigravity)
-```bash
+# Project (many IDEs)
 git clone https://github.com/napattan/agent-skills.git .agents/skills
 ```
+
+Windows PowerShell examples use `$env:USERPROFILE\.claude\skills`, `$env:USERPROFILE\.grok\skills`, `$env:USERPROFILE\.gemini\config\skills`.
+
+Or run `scripts/install.ps1` / `scripts/install.sh` (copies into roots that already exist on this machine).
 
 ---
 
@@ -40,10 +48,10 @@ git clone https://github.com/napattan/agent-skills.git .agents/skills
 | Skill | Command | Description | What It Solves |
 | :--- | :---: | :--- | :--- |
 | **BoostX Protocol** | `/boostx` | **High-discipline root-cause engineering protocol**. Enforces a mandatory 4-phase lifecycle: (1) Red Invariant Gate, (2) Ponytail Anti-Bloat Ladder, (3) Dual-OS Surgical Standards, and (4) Ruthless 3-Tier Verification. | Stops AI agents from writing speculative code, guessing at bug symptoms, or introducing bloated abstractions. |
-| **Skill Creator** | `/create-skill` | **Agent skill compiler & quality linter**. Scaffolds new skills from documentation or distills completed chat workflows into reusable skills. Enforces context budgets, regex trigger validation, secret scanning, and dual-OS parity. | Solves undertriggering, prompt context bloat, broken symlinks, and hardcoded machine paths in custom skills. |
+| **Skill Creator** | `/create-skill` | Scaffold a portable SKILL.md for the current host (Claude, Grok, Gemini, Codex, Cursor). Full skill after description approval; dual-OS; no machine-user paths. | Stops thin stubs, wrong install folders, and host-only drafts. |
 | **Release Pre-Flight** | `/publish-audit` | **Automated security, secret, privacy & packaging audit**. Scans codebases for leaked API keys, tokens, private keys, Bandit vulnerabilities, Flake8 errors, hardcoded machine paths, and platform rules (QGIS, Food4Rhino, GitHub). | Prevents credential leaks, server interpolation errors, security flags, and broken release packages before going public. |
 | **QGIS Publisher** | `/publish-qgis` | **Deterministic QGIS plugin release packager & manager**. Validates `metadata.txt` against INI interpolation bugs, enforces single-root folder zip structure, manages SemVer bumps, runs AST-level Qt6 / QGIS 4 forward-compatibility checks ('QGIS 4 Ready' badge), and resolves package slugs via a 5-rung continuity ladder. | Eliminates plugin portal upload rejections, `%` interpolation crashes, folder name mismatches, and Qt6 deprecation blocks. |
-| **Doc Synchronizer** | `/update-doc` | **Multi-file cross-synchronization protocol**. Sweeps codebases to update all affected markdown documentation, HTML presentations, and indices after code or algorithm changes—eliminating drift. | Prevents documentation rot across multi-document repositories and API suites. |
+| **Doc Synchronizer** | `/update-doc` | Sync docs from **this chat** plus markdown/HTML in the **current workspace**. No baked-in project file list. | Stops stale claims after a change, on any repo. |
 
 ---
 
