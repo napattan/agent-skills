@@ -1,11 +1,11 @@
 # ⚡ Agent Skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/Platforms-Claude_Code_•_Google_Antigravity_•_Cursor_•_Codex-8A2BE2)](#-universal-installation)
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/napattan/agent-skills/releases/tag/v1.0.0)
+[![Platforms](https://img.shields.io/badge/Platforms-Claude_•_Grok_•_Gemini_•_Cursor_•_Codex-8A2BE2)](#-universal-installation)
 [![Dual-OS](https://img.shields.io/badge/Dual--OS-Windows_•_macOS_•_Linux-success)](#-the-boostx-engineering-discipline)
-[![Verification](https://img.shields.io/badge/Protocol-BoostX_Verified_✓-emerald)](#-the-boostx-engineering-discipline)
+[![Verification](https://img.shields.io/badge/Protocol-BoostX_Verified-emerald)](#-the-boostx-engineering-discipline)
 
-> **High-discipline developer protocols & reasoning engines for AI coding assistants.**  
 > Portable developer protocols for AI coding assistants (Claude Code, Grok, Gemini/Antigravity, Cursor, Codex, and similar), IDE or CLI, Windows, macOS, and Linux.
 
 ---
