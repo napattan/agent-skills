@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.1.0
+
+- `/brief`: load related workspace markdown (cap 8), then do `/brief <task>` in the same turn. HTML only when the task is a specific page. Portable: no baked-in filename list.
+- `/create-skill`: machine-path ban uses `C:\Users\<user>` so `/publish-audit --platform github` does not treat ellipsis placeholders as a real home path.
+
+### Install
+
+See README. Tag: `v1.1.0`.
+```bash
+git clone --branch v1.1.0 https://github.com/napattan/agent-skills.git
+```
+
 ## v1.0.0
 
 First tagged public line of this skill suite.

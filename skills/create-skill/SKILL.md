@@ -88,7 +88,7 @@ description: >
 Body rules:
 
 - Actionable steps, not an essay. Prefer existing CLIs over new scripts.
-- POSIX `/` in links. No `C:\Users\...` or `/Users/<person>/` in published text.
+- POSIX `/` in links. No `C:\Users\<user>` or `/Users/<user>/` in published text.
 - Dual-shell or Python for commands.
 - User-facing/release copy the skill will generate: no em/en dashes (ASCII hyphen is fine). No LaTeX. ASCII diagrams allowed **inside SKILL.md only**.
 - Python scripts start with UTF-8 stdout reconfigure.
