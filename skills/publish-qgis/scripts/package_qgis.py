@@ -51,7 +51,11 @@ EXCLUDE_PATTERNS = [
     r"thumbs\.db",
     r"desktop\.ini",
     r"^test_.*\.py$",
-    r"^scratch.*"
+    r"^scratch.*",
+    # plugins.qgis.org marks the version Validated (configured) if these ship
+    r"\.flake8$",
+    r"\.bandit$",
+    r"\.secrets\.baseline$",
 ]
 
 

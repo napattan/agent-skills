@@ -100,6 +100,8 @@ python .agents/skills/publish-qgis/scripts/check_qt6.py <plugin_dir>
 ### Step 2: Semantic Version Management & Metadata Verification
 QGIS enforces strict unique version numbers per plugin name in its database. You **cannot overwrite** an existing version number via the upload form.
 
+**Uploaded occupies the number even if not approved.** The public listing may say "no public version yet" while `1.1.0` / `1.1.2` already exist in the database. Do not reuse an unused *lower* number (for example `1.1.1`) while a higher one is already uploaded: Plugin Manager picks the highest version string, so the older zip would win if both were later approved. Always `--bump patch` from the **highest uploaded** version, not from the last public one.
+
 - **Patch release** (`1.1.0` → `1.1.1`): Bug fixes, metadata updates, packaging hotfixes, Qt6 forward scoping.
 - **Minor release** (`1.1.0` → `1.2.0`): New features, additional framing modes, new projection sliders.
 - **Major release** (`1.0.0` → `2.0.0`): Breaking architecture changes or native QGIS 4 architecture.
@@ -112,7 +114,7 @@ qgisMinimumVersion=3.16
 description=Short one-sentence summary in English.
 about=Detailed description. If using percentages, write '50 percent' or '50%%' — NEVER raw '%'.
 category=Cartography
-version=1.1.2
+version=1.0.0
 author=Your Name
 email=your.personal@email.com
 homepage=https://github.com/username/plugin-repo
@@ -155,8 +157,8 @@ To guarantee that the root folder inside the ZIP always matches the portal's reg
 1. **Root Slug Continuity**: Enforces exact root folder name matching across all version releases.
 2. **Mandatory Qt6 Gate**: Validates all Python files against the AST compliance visitor before creating archive.
 3. **Metadata Validation**: Validates all required fields, INI syntax, and escapes invalid characters.
-4. **Build Debris Elimination**: Automatically strips `__pycache__`, `.git`, `.DS_Store`, `test_*.py`, and scratch files.
-5. **Post-Build Unzip Verification**: Performs immediate unzip verification to confirm zero orphan files exist at the zip root.
+4. **Build Debris Elimination**: Automatically strips `__pycache__`, `.git`, `.DS_Store`, `test_*.py`, scratch files, and portal scanner configs (`.flake8`, `.bandit`, `.secrets.baseline`). Shipping those configs marks the version **Validated (configured)** and asks admins to review suppressed rules. Keep them in git for local lint; never put them in the ZIP. Portal flake8 already uses `--max-line-length=120`.
+5. **Post-Build Unzip Verification**: Performs immediate unzip verification to confirm zero orphan files exist at the zip root. Confirm the namelist has no `.flake8` / `.bandit` / `.secrets.baseline`.
 
 ---
 
@@ -167,15 +169,16 @@ To guarantee that the root folder inside the ZIP always matches the portal's reg
    - **Update Existing Plugin**: Navigate to `https://plugins.qgis.org/plugins/<id>/` and click **`+ Add version`**.
 2. Select the generated archive:
    `<plugin_dir>/dist/<plugin_slug>_v<version>.zip`
-3. Confirm the 6 checklist boxes:
+3. Optional **Changelog** box: one short English patch note (not mandatory).
+4. Confirm the 6 checklist boxes:
    - [✓] ZIP follows single-folder structure (`plugin_name/metadata.txt`).
    - [✓] Repository matches ZIP code.
    - [✓] English description.
    - [✓] Valid public metadata links.
    - [✓] Tested in QGIS.
    - [✓] Email agreement confirmed.
-4. Click **Upload**.
-5. Tag the release in Git:
+5. Click **Upload**. Wait for the Security Scan tab. Required outcome: 0 critical, and **no** "Developer-Supplied Config Files" / **Validated (configured)** banner. Target status is plain **Validated**. If the banner appears, the ZIP shipped a scanner config; bump patch and re-upload.
+6. Tag the release in Git:
    ```bash
    git add metadata.txt
    git commit -m "chore(release): bump version to v<version>"
@@ -193,5 +196,6 @@ To guarantee that the root folder inside the ZIP always matches the portal's reg
 | `Qt6 Check [N issues]` (Red Tab) | Unscoped Qt enums (e.g. `Qt.AlignCenter`) or direct `PyQt5` import | Run `python .agents/skills/publish-qgis/scripts/check_qt6.py <plugin_dir>` to list exact lines and replacements. Re-package and upload. |
 | `Errors parsing metadata.txt. '%' must be followed by '%' or '('` | Raw unescaped `%` in `description` or `about` | Replace `%` with `percent` or `%%` in `metadata.txt`. |
 | `Zip file must contain a single top-level directory` | Zipped loose files without parent folder | Use `package_qgis.py` which automatically prefixes all archive paths with `<plugin_slug>/`. |
-| `A plugin with this name and version number already exists` | Attempting to upload duplicate version | Run `package_qgis.py <plugin_dir> --bump patch` to increment version. |
+| `A plugin with this name and version number already exists` | Attempting to upload a version string that is already in the database, including **unapproved** uploads | Run `package_qgis.py <plugin_dir> --bump patch` from the highest uploaded version. Do not roll back to an unused lower number. |
 | `Email confirmation pending` | First upload under email address | Click confirmation link sent to the author email address defined in `metadata.txt`. |
+| `Validated (configured)` / Developer-Supplied Config Files | ZIP contains `.flake8`, `.bandit`, or `.secrets.baseline`. Portal uses those files during the scan and asks admins to review suppressed rules. | Leave those files in git for local lint. Do not ship them. `package_qgis.py` strips them. Re-package with `--bump patch` (you cannot overwrite an existing version). |
