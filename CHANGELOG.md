@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.2.0
+
+- `/update-doc`: major upgrade to the cross-document synchronization protocol:
+  - **Interactive HTML & Web Artifact Parity**: explicitly governs slide decks, architecture viewers, and dashboard portals. Mandates DOM container parity (`<section class="slide">`), sequential heading counters (`SLIDE 01 / N`), embedded JavaScript state (`totalSlides = N`), and repository CSS design token compliance.
+  - **Distribution Mirrors & Shadow References Invariant**: detects duplicated documents across distribution or export bundles (`dist/docs/`, `package/docs_reference/`) and enforces deterministic byte-for-byte synchronization.
+  - **Historical Boundary Protocol**: separates active SSOT invariants (must hit zero stale references) from immutable historical changelogs / ADRs (preserving past event context).
+  - **Cross-Platform Scripting Hygiene**: mandates Python standard library scratch execution with UTF-8 stdout reconfiguration for multi-line DOM / regex replacements, eliminating shell-specific CLI quote mangling.
+- `/update-doc`: added dedicated MIT LICENSE file and clean scripts guidance for standalone packaging.
+
+### Install
+
+See README. Tag: `v1.2.0`.
+```bash
+git clone --branch v1.2.0 https://github.com/napattan/agent-skills.git
+```
+
 ## v1.1.0
 
 - `/brief`: load related workspace markdown (cap 8), then do `/brief <task>` in the same turn. HTML only when the task is a specific page. Portable: no baked-in filename list.
