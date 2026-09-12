@@ -87,7 +87,8 @@ KNOWN_QT_SCOPED_ENUMS: Dict[str, Dict[str, Set[str]]] = {
         },
         "MatchFlag": {
             "MatchExactly", "MatchContains", "MatchStartsWith", "MatchEndsWith",
-            "MatchRegularExpression", "MatchWildcard", "MatchFixedString", "MatchCaseSensitive", "MatchWrap", "MatchRecursive"
+            "MatchRegularExpression", "MatchWildcard", "MatchFixedString",
+            "MatchCaseSensitive", "MatchWrap", "MatchRecursive"
         }
     },
     "QFrame": {
@@ -186,6 +187,27 @@ KNOWN_QT_SCOPED_ENUMS: Dict[str, Dict[str, Set[str]]] = {
             "DistanceYards", "DistanceMiles", "DistanceNauticalMiles",
             "DistanceCentimeters", "DistanceMillimeters", "DistanceDegrees", "DistanceUnknownUnit"
         }
+    },
+    "QPageSize": {
+        "Unit": {
+            "Millimeter", "Point", "Inch", "Pica", "Didot", "Cicero"
+        },
+        "PageSizeId": {
+            "A4", "B5", "Letter", "Legal", "Executive", "A0", "A1", "A2", "A3",
+            "A5", "A6", "A7", "A8", "A9", "B0", "B1", "B10", "B2", "B3", "B4",
+            "B6", "B7", "B8", "B9", "Custom"
+        }
+    },
+    "QPageLayout": {
+        "Orientation": {
+            "Portrait", "Landscape"
+        },
+        "Unit": {
+            "Millimeter", "Point", "Inch", "Pica", "Didot", "Cicero"
+        },
+        "Mode": {
+            "StandardMode", "FullPageMode"
+        }
     }
 }
 
@@ -223,7 +245,8 @@ class Qt6CompatibilityVisitor(ast.NodeVisitor):
                     node.lineno,
                     node.col_offset,
                     "ERROR",
-                    f"Direct PyQt5 import '{alias.name}'. QGIS plugins must import from 'qgis.PyQt' for Qt5/Qt6 portability."
+                    f"Direct PyQt5 import '{alias.name}'. "
+                    "QGIS plugins must import from 'qgis.PyQt' for Qt5/Qt6 portability."
                 ))
             elif alias.name == "QRegExp":
                 self.issues.append((
@@ -241,7 +264,8 @@ class Qt6CompatibilityVisitor(ast.NodeVisitor):
                     node.lineno,
                     node.col_offset,
                     "ERROR",
-                    f"Direct PyQt5 import 'from {node.module}'. QGIS plugins must import from 'qgis.PyQt' for Qt5/Qt6 portability."
+                    f"Direct PyQt5 import 'from {node.module}'. "
+                    "QGIS plugins must import from 'qgis.PyQt' for Qt5/Qt6 portability."
                 ))
         for alias in node.names:
             if alias.name == "QRegExp":
@@ -283,7 +307,8 @@ class Qt6CompatibilityVisitor(ast.NodeVisitor):
                             node.lineno,
                             node.col_offset,
                             "ERROR",
-                            f"Un-scoped enum '{cls_name}.{attr}'. Add '{scope}' before '{attr}': '{cls_name}.{scope}.{attr}'"
+                            f"Un-scoped enum '{cls_name}.{attr}'. "
+                            f"Add '{scope}' before '{attr}': '{cls_name}.{scope}.{attr}'"
                         ))
                         break
 
@@ -299,7 +324,9 @@ class Qt6CompatibilityVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def audit_directory_for_qt6(target_dir: Path, ignore_patterns: List[str] = None) -> List[Tuple[str, int, int, str, str]]:
+def audit_directory_for_qt6(
+    target_dir: Path, ignore_patterns: List[str] = None
+) -> List[Tuple[str, int, int, str, str]]:
     """Scan all python files in target_dir for Qt6 / QGIS 4 compatibility issues."""
     target_dir = target_dir.resolve()
     ignores = ignore_patterns or DEFAULT_IGNORES
@@ -321,7 +348,9 @@ def audit_directory_for_qt6(target_dir: Path, ignore_patterns: List[str] = None)
                 content = filepath.read_text(encoding="utf-8", errors="ignore")
                 tree = ast.parse(content, filename=str(filepath))
             except SyntaxError as e:
-                all_issues.append((rel_path, e.lineno or 1, e.offset or 0, "ERROR", f"SyntaxError parsing Python file: {e}"))
+                all_issues.append((
+                    rel_path, e.lineno or 1, e.offset or 0, "ERROR", f"SyntaxError parsing Python file: {e}"
+                ))
                 continue
 
             visitor = Qt6CompatibilityVisitor(filepath, rel_path)

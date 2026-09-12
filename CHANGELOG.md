@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.3.0
+
+- `/publish-audit`:
+  - **5-Pillar High-Security & Privacy Architecture**: expanded secret detection across 16 high-entropy token patterns (AWS, GitHub classic & fine-grained, OpenAI, Anthropic, Google AI, Slack, HuggingFace, PyPI, GitLab, NPM, Stripe, SendGrid, Discord webhooks, SSH/RSA private keys, and database connection strings).
+  - **Deep Python AST Vulnerability Scanner**: static AST analysis blocking dynamic execution (`eval()`, `exec()`, `compile()`, `__import__()`), shell injection (`os.system()`, `os.popen()`, `subprocess.*(shell=True)`), insecure deserialization (`pickle`, `_pickle`, `marshal`, `shelve`), race-condition temp files (`tempfile.mktemp()`), and memory injection primitives (`VirtualAlloc`, `WriteProcessMemory`, `CreateRemoteThread`).
+  - **Undeclared Network Activity Auditing**: inspects and flags outbound socket connections and HTTP clients (`urllib`, `requests`, `httpx`, `aiohttp`, `socket`).
+  - **Flake8 Quality Gate**: integrated code quality audit strictly enforcing the project's local `.flake8` configuration.
+  - **QGIS Architecture Invariants**: validates mandatory `classFactory(iface)` hook in `__init__.py`, INI interpolation syntax (zero raw unescaped `%`), HTTPS-only public metadata links, and integrated Qt6 forward-compatibility checks.
+- `/publish-qgis`:
+  - **Qt6 / QGIS 4 Forward-Compatibility Scoped Enum Expansion**: added scoping for `QPageSize.Unit.Point`, `QPageLayout.Orientation.Portrait`, `QPageSize.PageSizeId`, and `QPageLayout.Mode`, guaranteeing the green **"QGIS 4 Ready"** badge on `plugins.qgis.org`.
+  - **Pure Runtime Release Packaging**: automatically excludes developer setup scripts (`install_plugin.py`, `generate_icons.py`), test suites (`test_*.py`), scratch files, and linter configs (`.flake8`, `.bandit`, `.secrets.baseline`) from release archives.
+  - **Deterministic Byte-Reproducible ZIP Creation**: fixed epoch timestamp `(2026, 1, 1, 0, 0, 0)` and normalized POSIX permissions (`0o644`) to eliminate developer timestamp and metadata leaks.
+
+### Install
+
+See README. Tag: `v1.3.0`.
+```bash
+git clone --branch v1.3.0 https://github.com/napattan/agent-skills.git
+```
+
 ## v1.2.0
 
 - `/update-doc`: major upgrade to the cross-document synchronization protocol:

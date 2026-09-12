@@ -65,6 +65,8 @@ When plugins are uploaded to `plugins.qgis.org`, the portal executes an automate
 | `Qt.WaitCursor` | `Qt.CursorShape.WaitCursor` |
 | `QgsWkbTypes.PolygonGeometry` | `QgsWkbTypes.GeometryType.PolygonGeometry` |
 | `QgsUnitTypes.LayoutMillimeters` | `QgsUnitTypes.LayoutUnit.LayoutMillimeters` |
+| `QPageSize.Point` / `Millimeter` | `QPageSize.Unit.Point` / `QPageSize.Unit.Millimeter` |
+| `QPageLayout.Portrait` / `Landscape` | `QPageLayout.Orientation.Portrait` / `QPageLayout.Orientation.Landscape` |
 
 > [!IMPORTANT]
 > **Zero Direct `from PyQt5` Imports:** Never import directly from `PyQt5.QtCore` or `PyQt5.QtGui`, even in fallback `except ImportError` blocks. Always import from `qgis.PyQt.*`.
@@ -81,18 +83,19 @@ When plugins are uploaded to `plugins.qgis.org`, the portal executes an automate
 └─────────────────────────┘     └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-### Step 1: Execute Pre-Flight Security & Qt6 Audits
-Before packaging, run both the security audit and the Qt6 forward-compatibility scan:
+### Step 1: Execute Pre-Flight Audits
+Before packaging, run the universal security, Flake8, and Qt6 forward-compatibility scan:
 
 ```bash
-# 1. Run Pre-Flight Security & Privacy Scan
+# 1. Run Pre-Flight Security, Privacy & Flake8 Scan
 python .agents/skills/publish-audit/scripts/audit_engine.py <plugin_dir> --platform qgis
 
-# 2. Run Qt6 / QGIS 4 Forward-Compatibility AST Linter
+# 2. Run Qt6 / QGIS 4 Forward-Compatibility AST Linter directly
 python .agents/skills/publish-qgis/scripts/check_qt6.py <plugin_dir>
 ```
 
-* **Security Gate**: Zero detected API keys, zero hardcoded developer machine paths (`C:\Users\<user>\...`), zero unhandled `B110: try_except_pass` blocks, and zero unescaped `%` symbols in `metadata.txt`.
+* **Security & Secrets Gate**: Zero detected API keys (AWS, GitHub, HF, PyPI, OpenAI), zero hardcoded developer machine paths (`C:\Users\<user>\...`), zero unhandled `B110: try_except_pass` blocks, and zero unescaped `%` symbols in `metadata.txt`.
+* **Flake8 Quality Gate**: Zero style or lint violations against the local `.flake8` configuration.
 * **Qt6 Gate**: Zero unscoped enums, zero direct `PyQt5` imports, and zero deprecated Qt6 methods.
 
 ---
@@ -128,11 +131,11 @@ tags=axonometric,isometric,cartography,diagram
 
 ---
 
-### Step 3: Package Release ZIP Archive
+### Step 3: Package Release ZIP Archive (5 Integrated Quality Gates)
 Run the deterministic packaging engine:
 
 ```bash
-# Package current version (automatically runs Qt6 validation gate)
+# Package current version (automatically enforces all 5 gates):
 python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir>
 
 # Automatically bump patch version and package:
@@ -141,8 +144,10 @@ python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --bump p
 # Explicitly override internal package folder name:
 python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --package-name <slug>
 
-# (Optional) Bypass Qt6 check if packaging legacy QGIS 2/3-only branch:
-python .agents/skills/publish-qgis/scripts/package_qgis.py <plugin_dir> --skip-qt6
+# (Optional overrides for debugging):
+# --skip-qt6        Bypass Qt6 check
+# --skip-flake8     Bypass Flake8 check
+# --skip-security   Bypass secret/path check
 ```
 
 #### Deterministic Package Name Resolution Ladder:
@@ -156,9 +161,12 @@ To guarantee that the root folder inside the ZIP always matches the portal's reg
 #### What this script guarantees:
 1. **Root Slug Continuity**: Enforces exact root folder name matching across all version releases.
 2. **Mandatory Qt6 Gate**: Validates all Python files against the AST compliance visitor before creating archive.
-3. **Metadata Validation**: Validates all required fields, INI syntax, and escapes invalid characters.
-4. **Build Debris Elimination**: Automatically strips `__pycache__`, `.git`, `.DS_Store`, `test_*.py`, scratch files, and portal scanner configs (`.flake8`, `.bandit`, `.secrets.baseline`). Shipping those configs marks the version **Validated (configured)** and asks admins to review suppressed rules. Keep them in git for local lint; never put them in the ZIP. Portal flake8 already uses `--max-line-length=120`.
-5. **Post-Build Unzip Verification**: Performs immediate unzip verification to confirm zero orphan files exist at the zip root. Confirm the namelist has no `.flake8` / `.bandit` / `.secrets.baseline`.
+3. **Mandatory Flake8 Gate**: Runs Flake8 against `.flake8` config and halts if style/syntax errors exist.
+4. **Mandatory Security Gate**: Scans for leaked tokens/credentials and developer machine user paths (`C:\Users\<user>`).
+5. **Metadata Validation**: Validates all required fields, INI syntax, and escapes invalid characters.
+6. **Deterministic ZIP Timestamps & Permissions**: Normalizes file timestamps to a fixed epoch and standard `0o644` permissions for reproducible builds without leaking author machine states.
+7. **Build Debris Elimination**: Automatically strips `__pycache__`, `.git`, `.DS_Store`, `test_*.py`, scratch files, and portal scanner configs (`.flake8`, `.bandit`, `.secrets.baseline`). Shipping those configs marks the version **Validated (configured)** and asks admins to review suppressed rules. Keep them in git for local lint; never put them in the ZIP. Portal flake8 already uses `--max-line-length=120`.
+8. **Post-Build Unzip Verification**: Performs immediate unzip verification to confirm zero orphan files exist at the zip root. Confirm the namelist has no `.flake8` / `.bandit` / `.secrets.baseline`.
 
 ---
 
